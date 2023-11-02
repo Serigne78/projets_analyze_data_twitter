@@ -1,6 +1,7 @@
 import json
 import re
 import pandas as pd
+import textblob
 
 df = pd.read_json("aitweets.json")
 
@@ -62,6 +63,21 @@ def find_user_hashtags(hashtag):
             print(hashtag)
             print(tweet)
 find_user_mention("#hdatasystems")
+
+
+def sentiment(id):
+    s = df.loc[df['id'] == id]
+    texte= s['TweetText']
+    texte=str(texte)
+    blob =TextBlob(texte)
+    sentiment = blob.sentiment
+    r=sentiment.polarity
+    if r<=0:
+        return ':('
+    else:
+        return ':)'
+
+print(sentiment(1415291877897605120))
      
 
 
