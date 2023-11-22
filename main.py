@@ -143,6 +143,24 @@ def topk_hashtag(k):
 # Exemple d'utilisation pour afficher les 5 hashtags les plus courants
 topk_hashtag(int(input("Top K hastags: ")))
 
+
+def topKmentionne(k):
+    dic={}
+    for tweet in df["TweetText"]:
+        arobases = re.findall(r'#\@+', tweet)
+        for arobase in arobases:
+            arobase = arobase.lower()  # Convertir en minuscules pour compter de manière insensible à la casse
+            if arobase in dic:
+                dic[arobase] += 1
+            else:
+                dic[arobase] = 1
+    sorted_arobases = sorted(dic.items(), key=lambda x: x[1], reverse=True)
+    top_k_arobases = sorted_arobases[:k]
+    for arobase, count in top_k_arobases:
+        print(f"Hashtag : {arobase}, Fréquence : {count}")
+        
+print(topKmentionne(int(input("Top K arobase: "))))
+
 def extraction_hashtags(id):
     tweet_recherche = df.loc[df['id'] == id]
     texte_du_tweet = tweet_recherche['TweetText'].values[0]
