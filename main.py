@@ -4,9 +4,14 @@ import pandas as pd
 import textblob
 import matplotlib.pyplot as plt
 import random
+from gensim import corpora, models
+from nltk.tokenize import word_tokenize
+from nltk.corpus import stopwords
+from gensim.parsing.preprocessing import preprocess_string
+from langdetect import detect
 
 
-
+"""
 with open("aitweets.json", "r", encoding="utf-8") as f:
     tweets = json.load(f)
 
@@ -111,13 +116,19 @@ auteur = ["TwitMaster23",
     "InspirationDeTweeter",
     "VortexTwitter"
     ]
+def supprimer_caracteres_speciaux(texte):
+    # Utiliser une expression régulière pour supprimer les caractères spéciaux
+    texte_propre = re.sub(r'[^\w\s@#]', '', texte)
+    return texte_propre
+
 
 for tweet in tweets:
     tweet["Author"] = random.choice(auteur)
+    tweet["TweetText"] = supprimer_caracteres_speciaux(tweet["TweetText"])
 
-with open('aitweets.json', 'w', encoding='utf-8') as f:
+with open('zone_atterissage.json', 'w', encoding='utf-8') as f:
     json.dump(tweets, f, ensure_ascii=False, indent=2)
-
+"""
 # Assurez-vous d'avoir déjà chargé vos données dans un DataFrame, par exemple, df.
 df = pd.read_json("aitweets.json")
 def topk_hashtag(k):
@@ -174,29 +185,60 @@ def find_user_hashtags(hashtag):
             print(hashtag)
             print(tweet)
 find_user_mention("#hdatasystems")
-     
-taille = len(df)
-print(taille)
 
-print(df)
+
+def topKmentionne(k):
+    dic={}
+    for tweet in df["TweetText"]:
+        arobases = re.findall(r'@\w+', tweet)
+        for arobase in arobases:
+              # Convertir en minuscules pour compter de manière insensible à la casse
+            if arobase in dic:
+                dic[arobase] += 1
+            else:
+                dic[arobase] = 1
+    sorted_arobases = sorted(dic.items(), key=lambda x: x[1], reverse=True)
+    top_k_arobases = sorted_arobases[:k]
+    for arobase, count in top_k_arobases:
+        print(f"Hashtag : {arobase}, Fréquence : {count}")
+
+print(topKmentionne(int(input("Top K arobase: "))))
+
+
+def topk_utilisateur(k):
+    dico={}
+    p=[]
+    for auteur in df["Author"]:
+        if auteur in dico:
+            dico[auteur]+=1
+        else:
+            dico[auteur]=1
+    maxi=0
+    for j in range(k):
+        for i in dico:
+            if dico[i]>maxi:
+                maxi=dico[i]
+        p.append(i)
+        del dico[i]
+    return p
+
+
+print(topk_utilisateur(int(input("Top K utilisateur: "))))
+
+def nb_pub_par_user(auteur):
+    s=0
+    for i in df["Author"]:
+        if auteur==i:
+            s=s+1
+    return s
+
+
+print(nb_pub_par_user(str(input("user: "))))
+
+
+
 
     
-
-def sentiment(id):
-    s = df.loc[df['id'] == id]
-    texte= s['TweetText']
-    texte=str(texte)
-    blob =TextBlob(texte)
-    sentiment = blob.sentiment
-    r=sentiment.polarity
-    if r<=0:
-        return ':('
-    else:
-        return ':)'
-
-print(sentiment(1415291877897605120))
-     
-
 
 
     
