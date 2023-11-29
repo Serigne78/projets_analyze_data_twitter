@@ -130,7 +130,7 @@ with open('zone_atterissage.json', 'w', encoding='utf-8') as f:
     json.dump(tweets, f, ensure_ascii=False, indent=2)
 """
 # Assurez-vous d'avoir déjà chargé vos données dans un DataFrame, par exemple, df.
-df = pd.read_json("aitweets.json")
+df = pd.read_json("zone_atterissage.json")
 def topk_hashtag(k):
     hashtags_freq = {}  # Dictionnaire pour stocker la fréquence des hashtags
 
@@ -184,7 +184,7 @@ def find_user_hashtags(hashtag):
         if hashtag in tweet:
             print(hashtag)
             print(tweet)
-find_user_mention("#hdatasystems")
+find_user_hashtags("#ml")
 
 
 def topKmentionne(k):
@@ -236,9 +236,56 @@ def nb_pub_par_user(auteur):
 print(nb_pub_par_user(str(input("user: "))))
 
 
+"""# Fonction de détection de la langue
+def detecter_langue(texte):
+    try:
+        return detect(texte)
+    except:
+        return "inconnue"
 
+# Appliquer la détection de langue à chaque tweet
+df["Langue"] = df["TweetText"].apply(detecter_langue)
+
+# Prétraitement en fonction de la langue
+def pretraitement_langue(texte, langue):
+    custom_filters = [
+        lambda x: x.lower(),  # Convertir en minuscules
+        lambda x: re.sub(r'@[^\s]+', '', x),  # Supprimer les mentions
+        lambda x: re.sub(r'http[^\s]+', '', x),  # Supprimer les liens
+        lambda x: re.sub(r'[^a-zA-Z\s]', '', x),  # Supprimer les caractères spéciaux sauf les lettres
+    ]
+    if langue == "en":
+        return preprocess_string(texte, filters=custom_filters)
+    elif langue == "fr":
+        # Ajouter des étapes de prétraitement spécifiques au français si nécessaire
+        pass
+    # Ajouter d'autres langues au besoin
+    else:
+        return preprocess_string(texte, filters=custom_filters)
+
+# Prétraitement des tweets en fonction de la langue détectée
+df["TweetTextPreprocessed"] = df.apply(lambda row: pretraitement_langue(row["TweetText"], row["Langue"]), axis=1)
+
+# Créer un dictionnaire à partir des tweets prétraités
+dictionnaire = corpora.Dictionary(df["TweetTextPreprocessed"].apply(str.split))
+
+# Créer un corpus à partir du dictionnaire
+corpus = [dictionnaire.doc2bow(texte.split()) for texte in df["TweetTextPreprocessed"]]
+
+# Construire le modèle LDA
+lda_model = models.LdaModel(corpus, num_topics=3, id2word=dictionnaire, passes=15)
+
+# Afficher les sujets
+topics = lda_model.print_topics(num_words=5)
+for topic in topics:
+    print(topic)"""
 
     
-
-
-    
+def nb_pub_par_hashtag(hashtag):
+    s=0
+    for tweet in df['TweetText']:
+        hasht=re.findall(r'#\w+', tweet)
+        if hashtag in hasht:
+            s=s+1
+    return s
+print(nb_pub_par_hashtag(str(input("recherche Hashtag: "))))
